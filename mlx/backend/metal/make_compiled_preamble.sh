@@ -34,8 +34,10 @@ mkdir -p "$OUTPUT_DIR"
 CCC="xcrun -sdk macosx metal -x metal"
 HDRS=$( $CCC -I"$SRC_DIR" -I"$JIT_INCLUDES" -DMLX_METAL_JIT -E -P -CC -C -H "$INPUT_FILE" $CFLAGS -w 2>&1 1>/dev/null )
 
-# Remove any included system frameworks (for MetalPerformancePrimitive headers)
-HDRS=$(echo "$HDRS" | grep -v "Xcode")
+# Keep only MLX source headers. Metal toolchains can live in a cryptex rather
+# than an Xcode path; treating those system headers as relative MLX paths both
+# fails to read them and embeds machine-specific paths in generated sources.
+HDRS=$(echo "$HDRS" | awk -v root="$SRC_DIR/" 'index($2, root) == 1')
 
 # Use the header depth to sort the files in order of inclusion
 declare -a HDRS_LIST=($HDRS)
