@@ -50,10 +50,9 @@ if [ -n "$HDRS" ]; then
   fi
 fi
 
-# Remove any included system frameworks (for MetalPerformancePrimitive headers).
-# Match "Xcode.app" rather than bare "Xcode" so project checkouts that live under
-# a directory named Xcode/ are not filtered out along with the SDK headers.
-HDRS=$(echo "$HDRS" | grep -v "Xcode.app")
+# Embed only headers from this MLX source tree. Apple SDK headers can
+# reside outside Xcode.app and remain available to the Metal compiler.
+HDRS=$(echo "$HDRS" | awk -v root="$SRC_DIR/" 'index($2, root) == 1')
 
 # Use the header depth to sort the files in order of inclusion
 declare -a HDRS_LIST=()
