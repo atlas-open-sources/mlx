@@ -4,6 +4,7 @@
 #include <sstream>
 
 #include <fmt/format.h>
+#include <TargetConditionals.h>
 
 #define NS_PRIVATE_IMPLEMENTATION
 #define CA_PRIVATE_IMPLEMENTATION
@@ -219,6 +220,19 @@ MTL::Library* load_default_library(MTL::Device* device) {
   if (lib) {
     return lib;
   }
+
+#if defined(SWIFTPM_BUNDLE) && TARGET_OS_OSX
+  // The macOS package builds these shaders with the same floating-point
+  // flags as MLX's standalone Metal build.
+  for (auto path : {
+           "../Resources/mlx-swift_CmlxMacMetal.bundle/Contents/Resources/default",
+           "mlx-swift_CmlxMacMetal.bundle/Contents/Resources/default"}) {
+    lib = load_colocated_library(device, path).first;
+    if (lib) {
+      return lib;
+    }
+  }
+#endif
 
 #ifdef SWIFTPM_BUNDLE
   // `swift test` with the default Swift Build build system nests resource
